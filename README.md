@@ -1,31 +1,18 @@
-BadBlood
+BluBlood
 ========
-BadBlood by Secframe fills a Microsoft Active Directory Domain with a structure and thousands of objects. The output of the tool is a domain similar to a domain in the real world.  After BadBlood is ran on a domain, security analysts and engineers can practice using tools to gain an understanding and prescribe to securing Active Directory. Each time this tool runs, it produces different results.  The domain, users, groups, computers and permissions are different. Every. Single. Time.
-
-- [Full User Guide and Info](https://www.secframe.com/badblood/)
-
-<img src="https://cdn2.hubspot.net/hubfs/3896789/SecFrame/BadBlood/BadBlood%20Icon.png" width=50% alt="BadBlood Icon">
-
-# Commands
-
-- `NONE`: At this time all items of the script are configured in the .ps1 files.  Files are outlined on the User Guide on [Secframe.com](https://www.secframe.com/badblood/)
+This repository is an edit of the BadBlood scripts by Secframe. The goal is to build an Active Directory Domain that is vulnerable for testing password spraying, AS-REP Roasting, etc. After running ran on a domain, security analysts and engineers can practice using tools to gain an understanding and prescribe to securing Active Directory. Each time this tool runs, it produces different results.
 
 
-## Acknowledgments
 
-I'd like to send thanks to the countless people who wanted this as a product and waited while I made it!
+## Automation
 
+### Vagrant
+A local copy of this repo on a host can be copied to a Vagrant guest by adding the following line in the ```Vagrantfile```:
+``` config.vm.provision "file", source: "~/git/BadBlood", destination: "$HOME/BadBlood" ``` and issuing ```vagrant provision``` 
+($HOME/BadBlood = c:\users\vagrant\BadBlood)
 
-# Screenshots
-
-<img src="https://cdn2.hubspot.net/hubfs/3896789/SecFrame/BadBlood/BadBlood%20Intro.png" width=100% alt="BadBlood Intro">
-<img src="https://cdn2.hubspot.net/hubfs/3896789/SecFrame/BadBlood/badblood1.png" alt="badblood start screen">
-<img src="https://cdn2.hubspot.net/hubfs/3896789/SecFrame/BadBlood/badblood2.png" alt="Findings">
-<img src="https://cdn2.hubspot.net/hubfs/3896789/SecFrame/BadBlood/badblood4.png" alt="IAM report">
-<img src="https://cdn2.hubspot.net/hubfs/3896789/SecFrame/BadBlood/Every%20Single%20Time.png" alt="BadBlood Every Single Time">
-<img src="https://cdn2.hubspot.net/hubfs/3896789/SecFrame/BadBlood/badblood5_bloodhoundimport.png" alt="Sample Bloodhound Sample After Badblood">
-
-
+### [Splunk Attack Range](https://github.com/splunk/attack_range) 
+Provides examples of executing this repo using Ansbile for automated AD setup
 
 ## Installation
 
@@ -36,16 +23,13 @@ Requirements:
 Running On Windows:
 ```
 # clone the repo
-git clone https://github.com/davidprowe/badblood.git
-#Run Invoke-badblood.ps1
+# Run Invoke-badblood.ps1
 ./badblood/invoke-badblood.ps1
+# Optional: Run with parameters; Use "-NonInteractive" for scripting
+./badblood/invoke-badblood.ps1 -UserCount 50
 ```
-
-# Talk About the BadBlood
-
-1. Message or Follow me on twitter @ davidprowe
-2. Drop a note on secframe.com
-3. I am not responsible for cleanup if this is run in a production domain
+## Acknowledgments (from the original author)
+I'd like to send thanks to the countless people who wanted this as a product and waited while I made it!
 
 ## License
 This project is licensed under the gplv3 License - see the LICENSE.md file for details
