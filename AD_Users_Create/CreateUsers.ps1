@@ -247,7 +247,7 @@
     if($accountType -le 3){ # X percent chance of being a service account
     #service
     $nameSuffix = "SA"
-    $description = 'Created with secframe.com/badblood.'
+    $description = 'Service Account'
     #removing do while loop and making random number range longer, sorry if the account is there already
     # this is so that I can attempt to import multithreading on user creation
     
@@ -262,21 +262,26 @@
     $name = $givenname+"_"+$surname
     }
     
-        $departmentnumber = [convert]::ToInt32('9999999') 
+    $departmentnumber = [convert]::ToInt32('9999999') 
         
-        
-    #Need to figure out how to do the L attribute
-    $description = 'Created with secframe.com/badblood.'
+    # Need to figure out how to do the L attribute <---why?-rtq
+    $description = 'Department Number ' + $departmentnumber
     $pwd = New-SWRandomPassword -MinPasswordLength 22 -MaxPasswordLength 25
     #======================================================================
     # 
     
     $passwordinDesc = 1..1000|get-random
         
-        $pwd = New-SWRandomPassword -MinPasswordLength 22 -MaxPasswordLength 25
-            if ($passwordinDesc -lt 10) { 
-                $description = 'Just so I dont forget my password is ' + $pwd 
-            }else{}
+    $pwd = New-SWRandomPassword -MinPasswordLength 22 -MaxPasswordLength 25
+    
+    if ($passwordinDesc -lt 10) { 
+        $description = 'Just so I dont forget my password is ' + $pwd 
+        
+        # Record users with passwd in description to file
+
+        Out-File -FilePath ..\passwd_in_desc.txt -Append -InputObject $name $ouLocation
+    }
+
     if($name.length -gt 20){
         $name = $name.substring(0,20)
     }
@@ -291,25 +296,14 @@
     }
 
     new-aduser -server $setdc  -Description $Description -DisplayName $name -name $name -SamAccountName $name -Surname $name -Enabled $true -Path $ouLocation -AccountPassword (ConvertTo-SecureString ($pwd) -AsPlainText -force)
-    
-    
-    
-        
-    
+     
     $pwd = ''
 
-    #==============================
-    # Set Does Not Require Pre-Auth for ASREP
-    #==============================
-    
-    $setASREP = 1..1000|get-random
-    if($setASREP -lt 20){
-	Get-ADuser $name | Set-ADAccountControl -DoesNotRequirePreAuth:$true
-    }
     
     #===============================
-    #SET ATTRIBUTES - no additional attributes set at this time besides UPN
-    #Todo: Set SPN for kerberoasting.  Example attribute edit is in createcomputers.ps1
+    # SET ATTRIBUTES - no additional attributes set at this time besides UPN
+    # Check AD_Attack_Vectors/CreateRandomSPN.ps1: Should set SPN for kerberoasting.  
+    # Example SPN attribute edit is in createcomputers.ps1 for reference
     #===============================
     
     $upn = $name + '@' + $dnsroot

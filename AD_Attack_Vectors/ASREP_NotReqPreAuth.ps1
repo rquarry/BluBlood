@@ -1,7 +1,7 @@
 function ADREP_NotReqPreAuth {
     <#
         .SYNOPSIS
-            Creates a Group in an active directory environment based on random data
+            Disables AD user account setting requiring Kerberos pre-authentication for logging on
         
         .DESCRIPTION
             Starting with the root container this tool randomly places users in the domain.

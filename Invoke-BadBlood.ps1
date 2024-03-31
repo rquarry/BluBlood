@@ -89,6 +89,9 @@ if($NonInteractive -eq $false){
 }
 if ($badblood -eq 'badblood') {
 
+   Write-Host "Setting Domain Password Policy" -ForegroundColor Green
+   Set-ADDefaultDomainPasswordPolicy -Identity (Get-addomain) -LockoutDuration 00:01:00 -LockoutObservationWindow 00:01:00 -ComplexityEnabled $false -ReversibleEncryptionEnabled $False -MinPasswordLength 4
+
    $Domain = Get-addomain
 
    # LAPS STUFF
@@ -147,7 +150,7 @@ if ($badblood -eq 'badblood') {
    $Grouplist = Get-ADGroup -Filter { GroupCategory -eq "Security" -and GroupScope -eq "Global" } -Properties isCriticalSystemObject
    $LocalGroupList = Get-ADGroup -Filter { GroupScope -eq "domainlocal" } -Properties isCriticalSystemObject
    
-   #Computer Creation Time
+   #Computer Creation
    write-host "Creating Computers on Domain" -ForegroundColor Green
 
    $X = 1
@@ -185,37 +188,61 @@ if ($badblood -eq 'badblood') {
    .($basescriptpath + '\AD_Attack_Vectors\AD_SPN_Randomizer\CreateRandomSPNs.ps1')
    CreateRandomSPNs -SPNCount 50
 
+   # Write SPN information from CreateRandomSPNs!
+
    write-host "Adding ASREP for a few users" -ForegroundColor Green
    Write-Progress -Activity "Adding ASREP Now" -Status "Progress:" -PercentComplete ($i / $totalscripts * 100)
-   # get .05 percent of the all users output and asrep them
+   # get five percent of users and asrep them. This is a large number for the default domain size.....
    $ASREPCount = [Math]::Ceiling($AllUsers.count * .05)
    $ASREPUsers = @()
-   $asrep = 1
-   do {
-
-      $ASREPUsers += get-random($AllUsers)
-      $asrep++}while($asrep -le $ASREPCount)
-
+  
+   # Some (very minor) risk that all object are returned if -Count arg exceeds $AllUsers.count
+   $ASREPUsers = Get-Random -InputObject $AllUsers -Count $ASREPCount
+   
    .($basescriptpath + '\AD_Attack_Vectors\ASREP_NotReqPreAuth.ps1')
    ADREP_NotReqPreAuth -UserList $ASREPUsers
-      <#
+
+   # Dump users to a file for verification
+   $ASREPUsers | Select-Object -Property Name,ObjectGUID | Export-Csv -Path Microsoft.PowerShell.Core\FileSystem::\\vagrant\c$\ASREP_users.csv -NoTypeInformation
+
+   ###############################################################################################
+   
+   write-host "Adding Weak User Passwords for a 25% of ASREP users" -ForegroundColor Green
+   Write-Progress -Activity "Adding Weak User Passwords" -Status "Progress:" -PercentComplete ($i / $totalscripts * 100)
+   # get 25 percent of the ASREP users and make their password vulnerable for cracking
+   $WeakASREPCount = [Math]::Ceiling($ASREPUsers.count * .25)
+   $WeakUsers = @()
+   $asrep = 1
+
+   $WeakASREPUsers = Get-Random -InputObject $ASREPUsers -Count $WeakASREPCount
+      
+   .($basescriptpath + '\AD_Attack_Vectors\WeakUserPasswords.ps1')
+   WeakUserPasswords -UserList $WeakASREPUsers
+
+   # Dump users to a file for verification
+   $WeakASREPUsers | Select-Object -Property Name,ObjectGUID | Export-Csv -Path Microsoft.PowerShell.Core\FileSystem::\\vagrant\c$\WeakASREP_users.csv -NoTypeInformation
+
+
    write-host "Adding Weak User Passwords for a few users" -ForegroundColor Green
    Write-Progress -Activity "Adding Weak User Passwords" -Status "Progress:" -PercentComplete ($i / $totalscripts * 100)
-   # get .05 percent of the all users output and asrep them
+   # get 2 percent of the all users and make their password vulnerable
    $WeakCount = [Math]::Ceiling($AllUsers.count * .02)
    $WeakUsers = @()
    $asrep = 1
-   do {
-
-      $WeakUsers += get-random($AllUsers)
-      $asrep++}while($asrep -le $WeakCount)
+   
+   $WeakUsers = Get-Random -InputObject $AllUsers -Count $WeakCount
 
    .($basescriptpath + '\AD_Attack_Vectors\WeakUserPasswords.ps1')
    WeakUserPasswords -UserList $WeakUsers
-    #>
 
+   # Dump users to a file for verification
+   # This doesn't write the AD information........
+   $WeakUsers | Select-Object -Property Name,ObjectGUID | Export-Csv -Path Microsoft.PowerShell.Core\FileSystem::\\vagrant\c$\WeakPassword_users.csv -NoTypeInformation
 
 }
+
+# Should be able to delete the below.....
+
 # $Definition = Get-Content Function:\CreateUser -ErrorAction Stop
    <#
    Attempt at multi threading.  Issues with AD Limits and connections per user per second.
